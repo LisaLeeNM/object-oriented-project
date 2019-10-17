@@ -33,6 +33,31 @@ class Author {
 	private $authorUsername;
 
 	/**
+	 * constructor for this Author
+	 *
+	 * @param int $newAuthorId new author id
+	 * @param string $newAuthorActivationToken new author activation token
+	 * @param string $newAuthorAvatarUrl new author avatar URL
+	 * @param string $newAuthorEmail new author email
+	 * @param string $newAuthorHash new author hash
+	 * @param string $newAuthorUsername new author username
+	 * @throws UnexpectedValueException if any of the parameters are invalid
+	 **/
+	public function __construct($newAuthorId, $newAuthorActivationToken, $newAuthorAvatarUrl, $newAuthorEmail, $newAuthorHash, $newAuthorUsername) {
+		try {
+			$this->setAuthorId($newAuthorId);
+			$this->setAuthorActivationToken($newAuthorActivationToken);
+			$this->setAuthorAvatarUrl($newAuthorAvatarUrl);
+			$this->setAuthorEmail($newAuthorEmail);
+			$this->setAuthorHash($newAuthorHash);
+			$this->setAuthorUsername($newAuthorUsername);
+		} catch(UnexpectedValueException $exception) {
+			// rethrow to the caller
+			throw(new UnexpectedValueException("Unable to construct Author", 0, $exception));
+		}
+	}
+
+	/**
 	 * accessor method for author id
 	 *
 	 * @return int value of author id
