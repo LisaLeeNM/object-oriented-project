@@ -212,5 +212,22 @@ class Author {
 		// store the author username
 		$this->authorUsername = $newAuthorUsername;
 	}
+
+	/**
+	 * toString() magic method
+	 *
+	 * @return string HTML formatted author
+	 **/
+	public function __toString() {
+		// create an HTML formatted Author
+		$html = "<p>Author id: " . $this->authorId
+				. "Author activation token: " . $this->authorActivationToken . "<br />"
+				. "Author avatar URL: "       . $this->authorAvatarUrl       . "<br />"
+				. "Author email: "            . $this->authorEmail           . "<br />"
+				. "Author hash: "             . $this->authorHash            . "<br />"
+				. "Author username: "         . $this->authorUsername
+				. "</p>";
+			return($html);
+	}
 }
 ?>
