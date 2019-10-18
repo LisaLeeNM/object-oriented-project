@@ -4,6 +4,7 @@ namespace LisaLeeNM\ObjectOrientedProject;
 require_once("autoload.php");
 require_once(dirname(__DIR__, 2) . "/vendor/autoload.php");
 
+use http\QueryString;
 use Ramsey\Uuid\Uuid;
 /**
  * Author Class
@@ -83,7 +84,7 @@ class Author implements \JsonSerializable {
 	 *
 	 * @return Uuid value of author id
 	 **/
-	public function getAuthorId() {
+	public function getAuthorId() : Uuid {
 		return($this->authorId);
 	}
 
@@ -109,9 +110,9 @@ class Author implements \JsonSerializable {
 	/**
 	 * accessor method for author activation token
 	 *
-	 * @return Uuid value of author activation token
+	 * @return string value of author activation token
 	 **/
-	public function getAuthorActivationToken() : Uuid{
+	public function getAuthorActivationToken() : string {
 		return($this->authorActivationToken);
 	}
 
@@ -145,33 +146,40 @@ class Author implements \JsonSerializable {
 	 *
 	 * @return string value of author avatar URL
 	 **/
-	public function getAuthorAvatarUrl() {
+	public function getAuthorAvatarUrl() : string {
 		return($this->authorAvatarUrl);
 	}
 
 	/**
 	 * mutator method for author avatar URL
 	 *
-	 * @param string $newauthorAvatarUrl new value of author avatar URL
-	 * @throws UnexpectedValueException if $newAuthorAvatarUrl is not valid
+	 * @param string $newAuthorAvatarUrl new value of author avatar URL
+	 * @throws \InvalidArgumentException if $newAuthorAvatarUrl is not a string or insecure
+	 * @throws \RangeException if $newAuthorAvatarUrl is > 255 characters
+	 * @throws \TypeError if $newAuthorAvatarUrl is not a string
 	 **/
-	public function setAuthorAvatarUrl($newAuthorAvatarUrl) {
+	public function setAuthorAvatarUrl($newAuthorAvatarUrl) : void {
 		// verify the author avatar URL is valid
-		$newAuthorAvatarUrl = filter_var($newAuthorAvatarUrl, FILTER_SANITIZE_STRING);
-		if($newAuthorAvatarUrl === false) {
-			throw(new UnexpectedValueException("author avatar URL is not a valid string"));
+		$newAuthorAvatarUrl = trim($newAuthorAvatarUrl);
+		$newAuthorAvatarUrl = filter_var($newAuthorAvatarUrl, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+		if(empty($newAuthorAvatarUrl === true) {
+			throw(new \InvalidArgumentException("author avatar URL is not a valid string"));
 		}
+
+		// verify the author avatar URL will fit in the database
+		if(strlen($newAuthorAvatarUrl) > 255)
+			throw(new \RangeException("author avatar URL is too large"));
+	}
 
 		// store the author avatar URL
 		$this->authorAvatarUrl = $newAuthorAvatarUrl;
 	}
-
 	/**
 	 * accessor method for author email
 	 *
 	 * @return string value of author email
 	 **/
-	public function getAuthorEmail() {
+	public function getAuthorEmail() : string {
 		return($this->authorEmail);
 	}
 
@@ -179,15 +187,22 @@ class Author implements \JsonSerializable {
 	 * mutator method for author email
 	 *
 	 * @param string $newAuthorEmail new value of author email
-	 * @throws UnexpectedValueException if $newAuthorEmail is not valid
+	 * @throws \InvalidArgumentException if $newAuthorEmail is not a string or insecure
+	 * @throws \RangeException if $newAuthorEmail is > 128 characters
+	 * @throws \TypeError if $newAuthorEmail is not a string
 	 **/
-	public function setAuthorEmail($newAuthorEmail) {
+	public function setAuthorEmail(string $newAuthorEmail) : void {
 		// verify the author email is valid
-		$newAuthorEmail = filter_var($newAuthorEmail, FILTER_SANITIZE_STRING);
-		if($newAuthorEmail === false) {
-			throw(new UnexpectedValueException("author email is not a valid string"));
+		$newAuthorEmail = trim($newAuthorEmail);
+		$newAuthorEmail = filter_var($newAuthorEmail, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+		if(empty($newAuthorEmail === true) {
+			throw(new \InvalidArgumentException("author email is empty or not a valid string"));
 		}
 
+		// verify the author email will fit the database
+		if(strlen($newAuthorEmail) > 128) {
+			throw(new \RangeException("author email content is too large"));
+		}
 		// store the author email
 		$this->authorEmail = $newAuthorEmail;
 	}
