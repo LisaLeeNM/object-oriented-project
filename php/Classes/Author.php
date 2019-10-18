@@ -1,47 +1,65 @@
 <?php
+
+namespace LisaLeeNM\ObjectOrientedProject;
+require_once("autoload.php");
+require_once(dirname(__DIR__, 2) . "/vendor/autoload.php");
+
+use Ramsey\Uuid\Uuid;
 /**
  * Author Class
  *
  * This class includes data for author avatar URL, email, hash, and username.
  *
  * @author Lisa Lee <llee28@cnm.edu>
+ * @version 0.0.1
  **/
-class Author {
+class Author implements \JsonSerializable {
+	use ValidateDate;
+	use ValidateUuid;
 	/**
 	 * id for Author; this is the primary key
+	 * @var Uuid $authorId
 	 **/
 	private $authorId;
 	/**
-	 * activation token for this person
+	 * token handed out to verify that the profile is valid and not malicious
+	 * @var string $authorActivationToken
 	 **/
 	private $authorActivationToken;
 	/**
 	 * avatar URL for this person
+	 * @var string $authorAvatarUrl
 	 **/
 	private $authorAvatarUrl;
 	/**
-	 * email for this person
+	 * email for this person; this is a unique index
+	 * @var string $profileEmail
 	 **/
 	private $authorEmail;
 	/**
-	 * hash for this person
+	 * hash for user password
+	 * @var string $authorHash
 	 **/
 	private $authorHash;
 	/**
-	 * username for this person
+	 * username for user
+	 * @var $authorUsername
 	 **/
 	private $authorUsername;
-
 	/**
 	 * constructor for this Author
 	 *
-	 * @param int $newAuthorId new author id
-	 * @param string $newAuthorActivationToken new author activation token
+	 * @param string|Uuid $newAuthorId new author id or null if new
+	 * @param string $newAuthorActivationToken activation token to safeguard against malicious accounts
 	 * @param string $newAuthorAvatarUrl new author avatar URL
-	 * @param string $newAuthorEmail new author email
-	 * @param string $newAuthorHash new author hash
-	 * @param string $newAuthorUsername new author username
-	 * @throws UnexpectedValueException if any of the parameters are invalid
+	 * @param string $newAuthorEmail contains email
+	 * @param string $newAuthorHash contains password hash
+	 * @param string $newAuthorUsername contains account holder's username
+	 * @throws \InvalidArgumentException if data types are not valid
+	 * @throws \RangeException if data values are out of bounds (e.g., strings too long, negative integers)
+	 * @throws \TypeError if a data type violate type hints
+	 * @throws \Exception if some other exception occurs
+	 * @documentation https://php.net/manual/en/language.oop5.decon.php
 	 **/
 	public function __construct($newAuthorId, $newAuthorActivationToken, $newAuthorAvatarUrl, $newAuthorEmail, $newAuthorHash, $newAuthorUsername) {
 		try {
@@ -51,9 +69,12 @@ class Author {
 			$this->setAuthorEmail($newAuthorEmail);
 			$this->setAuthorHash($newAuthorHash);
 			$this->setAuthorUsername($newAuthorUsername);
-		} catch(UnexpectedValueException $exception) {
+		}
+			// determine what exception type was thrown
+		catch(\InvalidArgumentException | \RangeException | \TypeError | \Exception $exception)
+			$exceptionType = get_class($exception);
 			// rethrow to the caller
-			throw(new UnexpectedValueException("Unable to construct Author", 0, $exception));
+			throw(new $exceptionType($exception->getMessage(), 0, $exception));
 		}
 	}
 
