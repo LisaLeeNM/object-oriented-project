@@ -212,7 +212,7 @@ class Author implements \JsonSerializable {
 	 *
 	 * @return string value of author hash
 	 **/
-	public function getAuthorHash() {
+	public function getAuthorHash() : string {
 		return($this->authorHash);
 	}
 
@@ -220,14 +220,20 @@ class Author implements \JsonSerializable {
 	 * mutator method for author hash
 	 *
 	 * @param string $newAuthorHash new value of author hash
-	 * @throws UnexpectedValueException if $newAuthorHash is not valid
+	 * @throws \InvalidArgumentException if $newAuthorHash is not a string or insecure
+	 * @throws \RangeException if $newAuthorHash is > 97 characters
+	 * @throws \TypeError if $newAuthorHash is not a string
 	 **/
-	public function setAuthorHash($newAuthorHash) {
-		// verify the author hash is valid
-		$newAuthorHash = filter_var($newAuthorHash, FILTER_SANITIZE_STRING);
-		if($newAuthorHash === false) {
-			throw(new UnexpectedValueException("author hash is not a valid string"));
+	public function setAuthorHash($newAuthorHash) : void {
+		// verify the author hash is secure
+		$newAuthorHash = trim($newAuthorHash);
+		$newAuthorHash = filter_var($newAuthorHash, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+		if(empty($newAuthorHash === true) {
+			throw(new \InvalidArgumentException("author hash is empty or insecure"));
 		}
+		// verify the author hash will fit in the database
+		if(strlen($newAuthorHash) > 97) {
+			throw(new \RangeException("author hash is too large"));
 
 		// store the author hash
 		$this->authorHash = $newAuthorHash;
