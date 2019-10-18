@@ -71,7 +71,7 @@ class Author implements \JsonSerializable {
 			$this->setAuthorUsername($newAuthorUsername);
 		}
 			// determine what exception type was thrown
-		catch(\InvalidArgumentException | \RangeException | \TypeError | \Exception $exception)
+		catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
 			$exceptionType = get_class($exception);
 			// rethrow to the caller
 			throw(new $exceptionType($exception->getMessage(), 0, $exception));
@@ -81,7 +81,7 @@ class Author implements \JsonSerializable {
 	/**
 	 * accessor method for author id
 	 *
-	 * @return int value of author id
+	 * @return Uuid value of author id
 	 **/
 	public function getAuthorId() {
 		return($this->authorId);
@@ -90,26 +90,28 @@ class Author implements \JsonSerializable {
 	/**
 	 * mutator method for author id
 	 *
-	 * @param int $newAuthorId new value of author id
-	 * @throws UnexpectedValueException if $newAuthorId is not an integer
+	 * @param Uuid|string $newAuthorId new value of author id
+	 * @throws \RangeException if $newAuthorId is not positive
+	 * @throws \TypeError if $newAuthorId is not a uuid or string
 	 **/
-	public function setAuthorId($newAuthorId) {
-		// verify the author id is valid
-		$newAuthorId = filter_var($newAuthorId, FILTER_VALIDATE_INT);
-		if($newAuthorId === false) {
-			throw(new UnexpectedValueException("author id is not a valid integer"));
+	public function setAuthorId( $newAuthorId) : void {
+		try {
+				$uuid = self::validateUuid($newAuthorId);
+		} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
+				$exceptionType = get_class($exception);
+				throw(new $exceptionType($exception->getMessage(), 0, $exception));
 		}
 
 		// convert and store the author id
-		$this->authorId = intval($newAuthorId);
+		$this->authorId = $uuid);
 	}
 
 	/**
 	 * accessor method for author activation token
 	 *
-	 * @return string value of author activation token
+	 * @return Uuid value of author activation token
 	 **/
-	public function getAuthorActivationToken() {
+	public function getAuthorActivationToken() : Uuid{
 		return($this->authorActivationToken);
 	}
 
@@ -117,13 +119,21 @@ class Author implements \JsonSerializable {
 	 * mutator method for author activation token
 	 *
 	 * @param string $newAuthorActivationToken new value of author activation token
-	 * @throws UnexpectedValueException if $newAuthorActivationToken is not valid
+	 * @throws \InvalidArgumentException if $newAuthorActivationToken is not a string or insecure
+	 * @throws \RangeException if $newAuthorActivationToken is > 32 characters
+	 * @throws \TypeError if $newAuthorActivationToken is not a string
 	 **/
-	public function setAuthorActivationToken($newAuthorActivationToken) {
+	public function setAuthorActivationToken(string $newAuthorActivationToken) : void {
 		// verify the author activation token is valid
-		$newAuthorActivationToken = filter_var($newAuthorActivationToken, FILTER_SANITIZE_STRING);
-		if($newAuthorActivationToken === false) {
-			throw(new UnexpectedValueException("author activation token is not a valid string"));
+		$newAuthorActivationToken = trim($newAuthorActivationToken);
+		$newAuthorActivationToken = filter_var($$newAuthorActivationToken, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+		if(empty($newAuthorActivationToken === true) {
+			throw(new \InvalidArgumentException("author activation token is not a valid string"));
+		}
+
+		// verify the activation token fits in the database
+		if(strlen($newAuthorActivationToken) > 32) {
+			throw(new \RangeException("activation token is too long"));
 		}
 
 		// store the author activation token
