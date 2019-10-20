@@ -4,8 +4,8 @@ namespace LisaLeeNM\ObjectOrientedProject;
 require_once("autoload.php");
 require_once(dirname(__DIR__, 2) . "/vendor/autoload.php");
 
-use http\QueryString;
 use Ramsey\Uuid\Uuid;
+
 /**
  * Author Class
  *
@@ -104,7 +104,7 @@ class Author implements \JsonSerializable {
 		}
 
 		// convert and store the author id
-		$this->authorId = $uuid);
+		$this->authorId = $uuid;
 	}
 
 	/**
@@ -125,10 +125,10 @@ class Author implements \JsonSerializable {
 	 * @throws \TypeError if $newAuthorActivationToken is not a string
 	 **/
 	public function setAuthorActivationToken(string $newAuthorActivationToken) : void {
-		// verify the author activation token is valid
+		// verify the author activation token is secure
 		$newAuthorActivationToken = trim($newAuthorActivationToken);
 		$newAuthorActivationToken = filter_var($$newAuthorActivationToken, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
-		if(empty($newAuthorActivationToken === true) {
+		if(empty($newAuthorActivationToken) === true) {
 			throw(new \InvalidArgumentException("author activation token is not a valid string"));
 		}
 
@@ -159,17 +159,17 @@ class Author implements \JsonSerializable {
 	 * @throws \TypeError if $newAuthorAvatarUrl is not a string
 	 **/
 	public function setAuthorAvatarUrl($newAuthorAvatarUrl) : void {
-		// verify the author avatar URL is valid
+		// verify the author avatar URL is secure
 		$newAuthorAvatarUrl = trim($newAuthorAvatarUrl);
 		$newAuthorAvatarUrl = filter_var($newAuthorAvatarUrl, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
-		if(empty($newAuthorAvatarUrl === true) {
+		if(empty($newAuthorAvatarUrl) === true) {
 			throw(new \InvalidArgumentException("author avatar URL is not a valid string"));
 		}
 
 		// verify the author avatar URL will fit in the database
-		if(strlen($newAuthorAvatarUrl) > 255)
+		if(strlen($newAuthorAvatarUrl) > 255) {
 			throw(new \RangeException("author avatar URL is too large"));
-	}
+		}
 
 		// store the author avatar URL
 		$this->authorAvatarUrl = $newAuthorAvatarUrl;
@@ -192,10 +192,10 @@ class Author implements \JsonSerializable {
 	 * @throws \TypeError if $newAuthorEmail is not a string
 	 **/
 	public function setAuthorEmail(string $newAuthorEmail) : void {
-		// verify the author email is valid
+		// verify the author email is secure
 		$newAuthorEmail = trim($newAuthorEmail);
 		$newAuthorEmail = filter_var($newAuthorEmail, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
-		if(empty($newAuthorEmail === true) {
+		if(empty($newAuthorEmail) === true) {
 			throw(new \InvalidArgumentException("author email is empty or not a valid string"));
 		}
 
@@ -210,56 +210,64 @@ class Author implements \JsonSerializable {
 	/**
 	 * accessor method for author hash
 	 *
-	 * @return string value of author hash
+	 * @return string value of hash
 	 **/
 	public function getAuthorHash() : string {
 		return($this->authorHash);
 	}
 
 	/**
-	 * mutator method for author hash
+	 * mutator method for author hash password
 	 *
-	 * @param string $newAuthorHash new value of author hash
-	 * @throws \InvalidArgumentException if $newAuthorHash is not a string or insecure
-	 * @throws \RangeException if $newAuthorHash is > 97 characters
+	 * @param string $newAuthorHash
+	 * @throws \InvalidArgumentException if $newAuthorHash is not secure
+	 * @throws \RangeException if $newAuthorHash is not 97 characters
 	 * @throws \TypeError if $newAuthorHash is not a string
 	 **/
-	public function setAuthorHash($newAuthorHash) : void {
-		// verify the author hash is secure
+	public function setAuthorHash(string $newAuthorHash) : void {
+		// enforce that the hash is properly formatted
 		$newAuthorHash = trim($newAuthorHash);
-		$newAuthorHash = filter_var($newAuthorHash, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
-		if(empty($newAuthorHash === true) {
+		if(empty($newAuthorHash) === true) {
 			throw(new \InvalidArgumentException("author hash is empty or insecure"));
 		}
-		// verify the author hash will fit in the database
-		if(strlen($newAuthorHash) > 97) {
-			throw(new \RangeException("author hash is too large"));
-
+		// enforce the hash is really an Argon hash
+		$authorHashInfo = password_get_info($newAuthorHash);
+		if($authorHashInfo["algoName"] !== "argon2i") {
+			throw(new \InvalidArgumentException("profile hash is not a valid hash"));
+		}
+		// enforce that the hash is exactly 97 characters
+		if(strlen($newAuthorHash) !== 97) {
+			throw(new \RangeException("author hash must be 97 characters"));
+		}
 		// store the author hash
 		$this->authorHash = $newAuthorHash;
 	}
-
 	/**
 	 * accessor method for author username
 	 *
 	 * @return string value of author username
 	 **/
-	public function getAuthorUsername() {
+	public function getAuthorUsername() : string {
 		return($this->authorUsername);
 	}
-
 	/**
 	 * mutator method for author username
 	 *
 	 * @param string $newAuthorUsername new value of author username
-	 * @throws UnexpectedValueException if $newAuthorUsername is not valid
+	 * @throws \InvalidArgumentException if $newAuthorUsername is not a string or insecure
+	 * @throws \RangeException if $newAuthorUsername is > 32 characters
+	 * @throws \TypeError if $newAuthorUsername is not a string
 	 **/
-	public function setAuthorUsername($newAuthorUsername) {
-		// verify the author username is valid
-		$newAuthorUsername = filter_var($newAuthorUsername, FILTER_SANITIZE_STRING);
-		if($newAuthorUsername === false) {
-			throw(new UnexpectedValueException("author username is not a valid string"));
+	public function setAuthorUsername(string $newAuthorUsername) : void {
+		// verify the author username is secure
+		$newAuthorUsername = trim($newAuthorUsername);
+		$newAuthorUsername = filter_var($newAuthorUsername, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+		if(empty($newAuthorUsername) === true) {
+			throw(new \InvalidArgumentException("author username is empty or insecure"));
 		}
+
+		// verify the author username will fit in the database
+		if(strlen($newAuthorUsername) > 32) {
 
 		// store the author username
 		$this->authorUsername = $newAuthorUsername;
