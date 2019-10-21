@@ -18,7 +18,7 @@ class Author implements \JsonSerializable {
 	use ValidateDate;
 	use ValidateUuid;
 	/**
-	 * id for Author; this is the primary key
+	 * id for this Author; this is the primary key
 	 * @var Uuid $authorId
 	 **/
 	private $authorId;
@@ -44,7 +44,7 @@ class Author implements \JsonSerializable {
 	private $authorHash;
 	/**
 	 * username for user
-	 * @var $authorUsername
+	 * @var string $authorUsername
 	 **/
 	private $authorUsername;
 	/**
@@ -62,23 +62,20 @@ class Author implements \JsonSerializable {
 	 * @throws \Exception if some other exception occurs
 	 * @documentation https://php.net/manual/en/language.oop5.decon.php
 	 **/
-	public function __construct($newAuthorId, $newAuthorActivationToken, $newAuthorAvatarUrl, $newAuthorEmail, $newAuthorHash, $newAuthorUsername) {
-		try {
-			$this->setAuthorId($newAuthorId);
-			$this->setAuthorActivationToken($newAuthorActivationToken);
-			$this->setAuthorAvatarUrl($newAuthorAvatarUrl);
-			$this->setAuthorEmail($newAuthorEmail);
-			$this->setAuthorHash($newAuthorHash);
-			$this->setAuthorUsername($newAuthorUsername);
-		}
-			// determine what exception type was thrown
-		catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
-			$exceptionType = get_class($exception);
-			// rethrow to the caller
-			throw(new $exceptionType($exception->getMessage(), 0, $exception));
+	public function __construct($newAuthorId, ?string $newAuthorActivationToken, string $newAuthorAvatarUrl, string $newAuthorEmail, string $newAuthorHash, string $newAuthorUsername) {
+			try {
+					$this->setAuthorId($newAuthorId);
+					$this->setAuthorActivationToken($newAuthorActivationToken);
+					$this->setAuthorAvatarUrl($newAuthorAvatarUrl);
+					$this->setAuthorEmail($newAuthorEmail);
+					$this->setAuthorHash($newAuthorHash);
+					$this->setAuthorUsername($newAuthorUsername);
+			} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
+					// determine what exception type was thrown
+					$exceptionType = get_class($exception);
+					throw(new $exceptionType($exception->getMessage(), 0, $exception));
 		}
 	}
-
 	/**
 	 * accessor method for author id
 	 *
@@ -87,60 +84,55 @@ class Author implements \JsonSerializable {
 	public function getAuthorId() : Uuid {
 		return($this->authorId);
 	}
-
 	/**
 	 * mutator method for author id
 	 *
-	 * @param Uuid|string $newAuthorId new value of author id
+	 * @param Uuid| string $newAuthorId new value of author id
 	 * @throws \RangeException if $newAuthorId is not positive
 	 * @throws \TypeError if $newAuthorId is not a uuid or string
 	 **/
 	public function setAuthorId( $newAuthorId) : void {
-		try {
-				$uuid = self::validateUuid($newAuthorId);
-		} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
-				$exceptionType = get_class($exception);
-				throw(new $exceptionType($exception->getMessage(), 0, $exception));
-		}
-
-		// convert and store the author id
-		$this->authorId = $uuid;
+			try {
+					$uuid = self::validateUuid($newAuthorId);
+			} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
+					$exceptionType = get_class($exception);
+					throw(new $exceptionType($exception->getMessage(), 0, $exception));
+			}
+			// convert and store the author id
+			$this->authorId = $uuid;
 	}
-
 	/**
 	 * accessor method for author activation token
 	 *
 	 * @return string value of author activation token
 	 **/
-	public function getAuthorActivationToken() : string {
-		return($this->authorActivationToken);
+	public function getAuthorActivationToken() : ?string {
+			return($this->authorActivationToken);
 	}
-
 	/**
 	 * mutator method for author activation token
 	 *
-	 * @param string $newAuthorActivationToken new value of author activation token
-	 * @throws \InvalidArgumentException if $newAuthorActivationToken is not a string or insecure
-	 * @throws \RangeException if $newAuthorActivationToken is > 32 characters
-	 * @throws \TypeError if $newAuthorActivationToken is not a string
+	 * @param string $newAuthorActivationToken
+	 * @throws \InvalidArgumentException if the token is not a string or insecure
+	 * @throws \RangeException if the token is not exactly 32 characters
+	 * @throws \TypeError if activation token is not a string
 	 **/
-	public function setAuthorActivationToken(string $newAuthorActivationToken) : void {
+	public function setAuthorActivationToken(?string $newAuthorActivationToken) : void {
 		// verify the author activation token is secure
-		$newAuthorActivationToken = trim($newAuthorActivationToken);
-		$newAuthorActivationToken = filter_var($$newAuthorActivationToken, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
-		if(empty($newAuthorActivationToken) === true) {
-			throw(new \InvalidArgumentException("author activation token is not a valid string"));
-		}
-
-		// verify the activation token fits in the database
-		if(strlen($newAuthorActivationToken) > 32) {
-			throw(new \RangeException("activation token is too long"));
-		}
-
-		// store the author activation token
-		$this->authorActivationToken = $newAuthorActivationToken;
+				if($newAuthorActivationToken === null) {
+							$this->authorActivationToken = null;
+							return;
+				}
+				$newAuthorActivationToken = strtolower(trim($newAuthorActivationToken));
+				if(ctype_xdigit($newAuthorActivationToken) === false) {
+							throw(new\RangeException("user activation is not valid"));
+				}
+				// make sure user activation token is only 32 characters
+				if(strlen($newAuthorActivationToken) !== 32) {
+					throw(new\RangeException("activation token has to be 32"));
+				}
+				$this->authorActivationToken = $newAuthorActivationToken;
 	}
-
 	/**
 	 * accessor method for author avatar URL
 	 *
@@ -243,18 +235,18 @@ class Author implements \JsonSerializable {
 		$this->authorHash = $newAuthorHash;
 	}
 	/**
-	 * accessor method for author username
+	 * accessor method for username
 	 *
-	 * @return string value of author username
+	 * @return string value of username
 	 **/
 	public function getAuthorUsername() : string {
 		return($this->authorUsername);
 	}
 	/**
-	 * mutator method for author username
+	 * mutator method for username
 	 *
-	 * @param string $newAuthorUsername new value of author username
-	 * @throws \InvalidArgumentException if $newAuthorUsername is not a string or insecure
+	 * @param string $newAuthorUsername new value of username
+	 * @throws \InvalidArgumentException if $newAuthorUsername is not a valid username or insecure
 	 * @throws \RangeException if $newAuthorUsername is > 32 characters
 	 * @throws \TypeError if $newAuthorUsername is not a string
 	 **/
