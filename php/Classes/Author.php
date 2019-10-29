@@ -289,6 +289,24 @@ class Author implements \JsonSerializable {
 	}
 
 	/**
+	 * updates this Author in mySQL
+	 *
+	 * @param \PDO $pdo PDO connection object
+	 * @throws \PDOException when mySQL related errors occur
+	 * @throws \TypeError if $pdo is not a PDO connection object
+	 **/
+	public function update(\PDO $pdo) : void {
+
+		// create query template
+		$query = "UPDATE author SET authorActivationToken = :authorActivationToken, authorAvatarUrl = :authorAvatarUrl, authorEmail = :authorEmail, authorHash = :authorHash, authorUsername = :authorUsername WHERE authorId = :authorId";
+		$statement = $pdo->prepare($query);
+
+		// bind member variable to placeholders
+		$parameters = ["authorId" => $this->authorId->getBytes(), "authorActivationToken" => $this->authorActivationToken, "authorAvatarUrl" => $this->authorAvatarUrl, "authorEmail" => $this->authorEmail, "authorHash" => $this->authorHash, "authorUsername" => $this->authorUsername];
+		$statement->execute($parameters);
+	}
+
+	/**
 	 * deletes this Author from mySQL
 	 *
 	 * @param \PDO $pdo PDO connection object
@@ -307,32 +325,15 @@ class Author implements \JsonSerializable {
 	}
 
 	/**
-	 * updates this Author in mySQL
-	 *
-	 * @param \PDO $pdo PDO connection object
-	 * @throws \PDOException when mySQL related errors occur
-	 * @throws \TypeError if $pdo is not a PDO connection object
-	 **/
-	public function update(\PDO $pdo) : void {
-
-		// create query template
-		$query = "UPDATE author SET authorActivationToken = :authorActivationToken, authorAvatarUrl = :authorAvatarUrl, authorEmail = :authorEmail, authorHash = :authorHash, authorUsername = :authorUsername WHERE authorId = :authorId";
-		$statement = $pdo->prepare($query);
-
-		$parameters = ["authorId" => $this->authorId->getBytes(), "authorActivationToken" => $this->authorActivationToken, "authorAvatarUrl" => $this->authorAvatarUrl, "authorEmail" => $this->authorEmail, "authorHash" => $this->authorHash, "authorUsername" => $this->authorUsername];
-		$statement->execute($parameters);
-	}
-
-	/**
-	 * gets the Email by authorId
+	 * gets the author by authorId
 	 *
 	 * @param \PDO $pdo PDO connection object
 	 * @param Uuid|string $authorId author id to search for
-	 * @return Email
+	 * @return Author|null Author found or null if not found
 	 * @throws \PDOException when mySQL related errors occur
 	 * @throws \TypeError when a variable are not the correct data type
 	 **/
-	public static function getEmailByAuthorId(\PDO $pdo, $authorId) : ?Email {
+	public static function getAuthorByAuthorId(\PDO $pdo, $authorId) : ?Author {
 		// sanitize the authorId before searching
 		try {
 			$authorId = self::validateUuid($authorId);
@@ -345,13 +346,13 @@ class Author implements \JsonSerializable {
 		$statement = $pdo->prepare($query);
 
 		// bind the author id to the placeholder in the template
-		$parameters = ["authorId" => $authorId->getBytes()];
-		$statement->execute($parameters);
+		//$parameters = ["authorId" => $authorId->getBytes()];
+		//$statement->execute($parameters);
 
 		//grab the author from mySQL
 		try {
 			$author = null;
-			@statement->setFetchMode(\PDO::FETCH_ASSOC);
+			$statement->setFetchMode(\PDO::FETCH_ASSOC);
 			$row = $statement->fetch();
 			if($row !== false) {
 				$author = new Author($row["authorId"], $row["authorActivationToken"], $row["authorAvatarUrl"], $row["authorEmail"], $row["authorHash"], $row["authorUsername"]);
@@ -364,16 +365,16 @@ class Author implements \JsonSerializable {
 	}
 
 	/**
-	* gets the Author by author id
+	* gets the Author by avatar URL
+	*
 	* @param \PDO $pdo PDO connection object
-	* @param UUid|string $authorId to search by
-	* @return \SplFixed Array SplFixedArray of Tweets found
+	* @param $authorAvatarUrl author avatar to search by
+	* @return \SplFixedArray SplFixedArray of authors with author avatar URL
 	* @throws \PDOException when mySQL related errors occur
-	* @throws \TypeError when variables are not the correct data type
 	**/
-	public static function getAuthorByAuthorId(\PDO $pdo, $authorId) : \SplFixedArray {
+	public static function getAuthorByAuthorAvatarUrl(\PDO $pdo, $authorAvatarUrl) : \SplFixedArray {
 		try {
-			$authorId = self::validateUuid($authorId);
+				$authorId = self::validateUuid($authorId);
 		} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
 				throw(new \PDOException($exception->getMessage(), 0, $exception));
 		}
@@ -395,7 +396,7 @@ class Author implements \JsonSerializable {
 				$authors->next();
 			} catch(\Exception $exception) {
 					// if the row couldn't be converted, rethrow it
-					throw(new \PDOException(($exception->getMessage(), 0, $exception));
+					throw(new \PDOException($exception->getMessage(), 0, $exception));
 			}
 		}
 		return($authors);
@@ -409,8 +410,7 @@ class Author implements \JsonSerializable {
 	public function jsonSerialize() {
 		$fields = get_object_vars($this);
 		$fields["authorId"] = $this->authorId->toString();
-		unset($fields["authorHash"]);
-		return ($fields);
+//		unset($authors["authorHash"]);
+		return ($authors);
 	}
 }
-?>
