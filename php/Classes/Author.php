@@ -83,7 +83,7 @@ class Author implements \JsonSerializable {
 	 * @return Uuid value of author id
 	 **/
 	public function getAuthorId(): Uuid {
-		return ($this->authorId);
+		return ($this->authorId)q
 	}
 
 	/**
